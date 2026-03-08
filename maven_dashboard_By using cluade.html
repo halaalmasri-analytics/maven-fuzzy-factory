@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maven Fuzzy Factory — Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --sw:236px;
+  --bd:#5C3D2E;--bm:#8B5E3C;--bl:#C4956A;
+  --beid:#E8D5B7;--beim:#F2E6D0;--beil:#FAF4EA;--beiw:#FDFAF5;
+  --gold:#C8973A;--golp:#E8C97A;
+  --td:#2E1F14;--tm:#6B4C35;--ts:#9A7858;
+  --cbg:rgba(255,251,244,0.97);
+  --bor:rgba(139,94,60,0.13);
+  --sh1:0 2px 10px rgba(92,61,46,0.09);
+  --sh2:0 6px 24px rgba(92,61,46,0.15);
+}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Outfit',sans-serif;background:var(--beil);color:var(--td);}
+.app{display:flex;width:100vw;height:100vh;overflow:hidden;}
+
+/* ══ SIDEBAR ══ */
+.sidebar{
+  width:var(--sw);min-width:var(--sw);height:100vh;
+  background:linear-gradient(175deg,#4A2E1E 0%,#2A1608 100%);
+  display:flex;flex-direction:column;z-index:20;overflow:hidden;position:relative;
+}
+.sidebar::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 0%,rgba(200,151,58,0.15),transparent 55%);}
+
+/* Bear Spotlight Section */
+.bear-spotlight{
+  padding:22px 16px 18px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  position:relative;
+}
+/* outer glow ring */
+.bear-ring{
+  position:relative;
+  width:90px;height:90px;
+  display:flex;align-items:center;justify-content:center;
+}
+.bear-ring::before{
+  content:'';position:absolute;inset:-6px;border-radius:50%;
+  background:conic-gradient(from 0deg,var(--gold),#f0d080,var(--gold),#b07010,var(--gold));
+  animation:spin-ring 8s linear infinite;opacity:0.7;
+}
+.bear-ring::after{
+  content:'';position:absolute;inset:-3px;border-radius:50%;
+  background:linear-gradient(135deg,#4A2E1E,#2A1608);
+}
+@keyframes spin-ring{to{transform:rotate(360deg);}}
+.bear-inner{
+  position:relative;z-index:2;
+  width:80px;height:80px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,#D4A853,#8B5E3C);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(200,151,58,0.5),0 0 40px rgba(200,151,58,0.2);
+  animation:bear-pulse 3s ease-in-out infinite;
+}
+@keyframes bear-pulse{
+  0%,100%{box-shadow:0 0 20px rgba(200,151,58,0.5),0 0 40px rgba(200,151,58,0.2);}
+  50%{box-shadow:0 0 28px rgba(200,151,58,0.7),0 0 55px rgba(200,151,58,0.35);}
+}
+.bear-face{width:58px;height:58px;animation:sway 4s ease-in-out infinite;}
+@keyframes sway{0%,100%{transform:rotate(-5deg);}50%{transform:rotate(5deg);}}
+
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;
+  color:var(--golp);text-align:center;line-height:1.3;position:relative;z-index:1;}
+.brand-sub{font-size:9px;color:rgba(255,255,255,0.32);letter-spacing:2px;text-transform:uppercase;text-align:center;}
+
+/* Nav */
+.sidebar-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:3px;}
+.nav-sec{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.22);padding:0 8px;margin:10px 0 4px;}
+.nav-sec:first-child{margin-top:0;}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+  cursor:pointer;border:none;background:transparent;width:100%;text-align:left;transition:all 0.2s;}
+.nav-btn:hover{background:rgba(255,255,255,0.07);}
+.nav-btn.active{background:linear-gradient(90deg,rgba(200,151,58,0.22),rgba(200,151,58,0.05));
+  border-left:3px solid var(--gold);padding-left:9px;}
+.n-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;background:rgba(255,255,255,0.07);flex-shrink:0;transition:all 0.2s;}
+.nav-btn.active .n-icon{background:rgba(200,151,58,0.2);}
+.n-lbl{font-size:12px;font-weight:500;color:rgba(255,255,255,0.58);transition:color 0.2s;}
+.nav-btn.active .n-lbl{color:var(--golp);}
+.sidebar-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.07);}
+.sidebar-foot p{font-size:9px;color:rgba(255,255,255,0.2);text-align:center;line-height:1.8;}
+
+/* ══ MAIN ══ */
+.main{flex:1;height:100vh;overflow:hidden;display:flex;flex-direction:column;background:var(--beil);}
+
+/* Topbar */
+.topbar{height:52px;min-height:52px;background:var(--beiw);border-bottom:1px solid var(--bor);
+  display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:var(--sh1);z-index:10;}
+.topbar-l{display:flex;align-items:center;gap:14px;}
+.tb-title{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;color:var(--td);}
+.topbar-r{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;}
+.sl-grp{display:flex;align-items:center;gap:5px;}
+.sl-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ts);white-space:nowrap;}
+.sl-sel{
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;
+  background:var(--beim);border:1.5px solid var(--bor);border-radius:8px;
+  color:var(--td);padding:4px 24px 4px 9px;cursor:pointer;outline:none;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23A08060' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 7px center;background-size:9px;
+  transition:border-color 0.2s;}
+.sl-sel:focus,.sl-sel:hover{border-color:var(--gold);}
+.sl-div{width:1px;height:22px;background:var(--bor);}
+.rst-btn{font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;
+  padding:4px 11px;border-radius:8px;border:1.5px solid var(--bor);
+  background:transparent;color:var(--ts);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.rst-btn:hover{background:rgba(139,94,60,0.08);border-color:var(--bm);color:var(--bm);}
+
+/* Pages */
+.pages{flex:1;overflow:hidden;position:relative;}
+.page{display:none;width:100%;height:100%;padding:12px 18px;overflow:hidden;}
+.page.active{display:flex;flex-direction:column;gap:10px;animation:pIn 0.3s ease;}
+@keyframes pIn{from{opacity:0;transform:translateX(8px);}to{opacity:1;transform:translateX(0);}}
+
+/* ══ KPI CARDS ══ */
+.kpi-row{display:grid;gap:9px;flex-shrink:0;}
+.k4{grid-template-columns:repeat(4,1fr);}
+.kpi-card{
+  background:var(--cbg);border:1px solid var(--bor);border-radius:13px;
+  padding:12px 14px;box-shadow:var(--sh1);
+  display:flex;align-items:center;gap:12px;
+  transition:transform 0.2s,box-shadow 0.2s;cursor:default;
+}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--sh2);}
+.ki-box{
+  width:44px;height:44px;min-width:44px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.25),0 2px 6px rgba(0,0,0,0.15);
+}
+.ib1{background:linear-gradient(135deg,#8B5E3C,#5C3D2E);}
+.ib2{background:linear-gradient(135deg,#C8973A,#9A6E20);}
+.ib3{background:linear-gradient(135deg,#C4956A,#8B5E3C);}
+.ib4{background:linear-gradient(135deg,#4A7A5C,#2E5A3A);}
+.ib5{background:linear-gradient(135deg,#5C3D2E,#3A2518);}
+.ib6{background:linear-gradient(135deg,#A03030,#6A1818);}
+.kpi-txt{}
+.kpi-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:27px;font-weight:700;color:var(--td);line-height:1.1;margin-top:1px;}
+.kpi-sub{font-size:9.5px;color:var(--ts);margin-top:1px;}
+.kpi-bar{height:3px;background:rgba(139,94,60,0.1);border-radius:2px;margin-top:7px;overflow:hidden;width:100%;}
+.kpi-barf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--bm),var(--gold));animation:bg 1.2s ease forwards;width:0;}
+@keyframes bg{to{width:var(--bw,60%);}}
+
+/* ══ CHART CARDS ══ */
+.chart-row{display:grid;gap:10px;flex:1;min-height:0;}
+.c2{grid-template-columns:1fr 1fr;}
+.c3{grid-template-columns:1fr 1fr 1fr;}
+.c211{grid-template-columns:2fr 1.1fr 1.1fr;}
+.c21{grid-template-columns:2fr 1fr;}
+.c32{grid-template-columns:1.6fr 1fr;}
+.chart-card{
+  background:var(--cbg);border:1px solid var(--bor);border-radius:13px;
+  padding:12px 14px;box-shadow:var(--sh1);
+  display:flex;flex-direction:column;overflow:hidden;min-height:0;transition:box-shadow 0.2s;
+}
+.chart-card:hover{box-shadow:var(--sh2);}
+.c-head{flex-shrink:0;margin-bottom:7px;display:flex;align-items:flex-start;justify-content:space-between;}
+.c-title{font-family:'Cormorant Garamond',serif;font-size:13.5px;font-weight:700;color:var(--td);}
+.c-sub{font-size:9.5px;color:var(--ts);margin-top:1px;}
+.c-wrap{flex:1;min-height:0;position:relative;}
+.c-wrap canvas{position:absolute;inset:0;width:100%!important;height:100%!important;}
+
+/* Spotlight bear card */
+.sp-card{
+  background:linear-gradient(110deg,#3A2010 0%,#6B3E22 45%,#8B5E3C 100%);
+  border-radius:13px;padding:14px 20px;display:flex;align-items:center;
+  justify-content:space-between;flex-shrink:0;position:relative;overflow:hidden;
+  border:1px solid rgba(200,151,58,0.25);
+  box-shadow:0 4px 20px rgba(60,30,10,0.3);
+}
+/* Bear in spotlight card */
+.sp-bear{
+  position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  display:flex;align-items:center;justify-content:center;
+  width:80px;height:80px;
+}
+.sp-bear-glow{
+  position:absolute;width:80px;height:80px;border-radius:50%;
+  background:radial-gradient(circle,rgba(200,151,58,0.35),transparent 70%);
+  animation:sp-pulse 2.5s ease-in-out infinite;
+}
+@keyframes sp-pulse{0%,100%{transform:scale(1);opacity:0.7;}50%{transform:scale(1.2);opacity:1;}}
+.sp-bear svg{position:relative;z-index:2;width:60px;height:60px;animation:sway 4s ease-in-out infinite;}
+.sp-title{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:700;color:var(--golp);margin-bottom:8px;}
+.sp-stats{display:flex;gap:20px;}
+.sp-stat .sv{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#fff;line-height:1;}
+.sp-stat .sl{font-size:8.5px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-top:2px;}
+
+/* Table */
+.tbl-wrap{flex:1;overflow-y:auto;min-height:0;}
+.tbl-wrap::-webkit-scrollbar{width:3px;}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(--beid);border-radius:2px;}
+table{width:100%;border-collapse:collapse;font-size:10.5px;}
+thead th{position:sticky;top:0;background:var(--beim);padding:6px 8px;
+  text-align:left;font-size:8.5px;font-weight:800;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--ts);border-bottom:1px solid var(--bor);}
+tbody td{padding:6.5px 8px;border-bottom:1px solid rgba(139,94,60,0.05);color:var(--td);}
+tbody tr:last-child td{font-weight:700;background:rgba(200,151,58,0.07);border-bottom:none;}
+tbody tr:hover:not(:last-child) td{background:rgba(139,94,60,0.04);}
+.bdg{display:inline-block;padding:1.5px 7px;border-radius:20px;font-size:9px;font-weight:700;}
+.bg{background:rgba(74,154,95,0.15);color:#357a4a;}
+.bo{background:rgba(200,151,58,0.15);color:#8a6218;}
+.br{background:rgba(200,80,80,0.13);color:#a03030;}
+.bb{background:rgba(80,120,200,0.13);color:#2a5a9a;}
+
+/* answer tags */
+.ans-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:8.5px;font-weight:700;
+  background:rgba(200,151,58,0.15);color:var(--gold);letter-spacing:0.5px;border:1px solid rgba(200,151,58,0.25);}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="bear-spotlight">
+    <div class="bear-ring">
+      <div class="bear-inner">
+        <svg class="bear-face" viewBox="0 0 80 80" fill="none">
+          <circle cx="40" cy="46" r="26" fill="#C4956A"/>
+          <circle cx="20" cy="22" r="11" fill="#C4956A"/>
+          <circle cx="60" cy="22" r="11" fill="#C4956A"/>
+          <circle cx="20" cy="22" r="6.5" fill="#D4A853"/>
+          <circle cx="60" cy="22" r="6.5" fill="#D4A853"/>
+          <ellipse cx="40" cy="54" rx="13" ry="10" fill="#D4A853"/>
+          <circle cx="32" cy="42" r="4.5" fill="#2E1F14"/>
+          <circle cx="48" cy="42" r="4.5" fill="#2E1F14"/>
+          <circle cx="33.5" cy="40.5" r="1.5" fill="white"/>
+          <circle cx="49.5" cy="40.5" r="1.5" fill="white"/>
+          <ellipse cx="40" cy="50" rx="4" ry="3" fill="#2E1F14"/>
+          <path d="M37 54 Q40 57.5 43 54" stroke="#2E1F14" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+          <ellipse cx="29" cy="50" rx="4.5" ry="2.5" fill="#E8906A" opacity="0.4"/>
+          <ellipse cx="51" cy="50" rx="4.5" ry="2.5" fill="#E8906A" opacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+    <div class="brand-name">Maven Fuzzy Factory</div>
+    <div class="brand-sub">Analytics · 2012–2015</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-sec">Overview</div>
+    <button class="nav-btn active" onclick="switchPage('summary',this)">
+      <div class="n-icon">🏠</div><span class="n-lbl">Executive Summary</span>
+    </button>
+    <div class="nav-sec">Deep Dive</div>
+    <button class="nav-btn" onclick="switchPage('trends',this)">
+      <div class="n-icon">📈</div><span class="n-lbl">Sessions & Trends</span>
+    </button>
+    <button class="nav-btn" onclick="switchPage('channels',this)">
+      <div class="n-icon">📣</div><span class="n-lbl">Channel Performance</span>
+    </button>
+    <button class="nav-btn" onclick="switchPage('products',this)">
+      <div class="n-icon">🐻</div><span class="n-lbl">Product & Profit</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-foot">
+    <p>Maven Fuzzy Factory<br>Teddy Bear E-Commerce<br>Mar 2012 – Apr 2015</p>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-l">
+      <div class="tb-title" id="ttitle">Executive Summary</div>
+    </div>
+    <div class="topbar-r">
+      <div class="sl-grp"><span class="sl-lbl">Year</span>
+        <select class="sl-sel" id="sl-year" onchange="applyFilters()">
+          <option value="all">All Years</option>
+          <option value="2012">2012</option><option value="2013">2013</option>
+          <option value="2014">2014</option><option value="2015">2015</option>
+        </select>
+      </div>
+      <div class="sl-div"></div>
+      <div class="sl-grp"><span class="sl-lbl">Device</span>
+        <select class="sl-sel" id="sl-device" onchange="applyFilters()">
+          <option value="all">All Devices</option>
+          <option value="desktop">Desktop</option><option value="mobile">Mobile</option>
+        </select>
+      </div>
+      <div class="sl-div"></div>
+      <div class="sl-grp"><span class="sl-lbl">Channel</span>
+        <select class="sl-sel" id="sl-channel" onchange="applyFilters()">
+          <option value="all">All Channels</option>
+          <option value="gsearch">gsearch</option><option value="bsearch">bsearch</option>
+          <option value="organic">organic</option><option value="socialbook">socialbook</option>
+        </select>
+      </div>
+      <div class="sl-div"></div>
+      <div class="sl-grp"><span class="sl-lbl">Product</span>
+        <select class="sl-sel" id="sl-product" onchange="applyFilters()">
+          <option value="all">All Products</option>
+          <option value="0">Mr. Fuzzy</option><option value="1">Forever Love</option>
+          <option value="2">Hudson River</option><option value="3">Birthday Panda</option>
+        </select>
+      </div>
+      <div class="sl-div"></div>
+      <button class="rst-btn" onclick="resetFilters()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="pages">
+
+    <!-- ══ PAGE 1: EXECUTIVE SUMMARY ══ -->
+    <div class="page active" id="page-summary">
+      <div class="kpi-row k4">
+        <div class="kpi-card"><div class="ki-box ib1">👥</div><div class="kpi-txt">
+          <div class="kpi-lbl">Total Sessions</div><div class="kpi-val" id="kv-s">473K</div>
+          <div class="kpi-sub">Website visits 2012–2015</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:95%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib2">🛒</div><div class="kpi-txt">
+          <div class="kpi-lbl">Total Orders</div><div class="kpi-val" id="kv-o">40K</div>
+          <div class="kpi-sub">Completed purchases</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:75%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib3">💰</div><div class="kpi-txt">
+          <div class="kpi-lbl">Total Revenue</div><div class="kpi-val" id="kv-r">$1.94M</div>
+          <div class="kpi-sub">All products combined</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:88%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib5">📈</div><div class="kpi-txt">
+          <div class="kpi-lbl">Conversion Rate</div><div class="kpi-val" id="kv-c">8.46%</div>
+          <div class="kpi-sub">Sessions → Orders</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:62%"></div></div>
+        </div></div>
+      </div>
+      <div class="kpi-row k4">
+        <div class="kpi-card"><div class="ki-box ib4">📊</div><div class="kpi-txt">
+          <div class="kpi-lbl">Gross Margin</div><div class="kpi-val">63%</div>
+          <div class="kpi-sub">Revenue after COGS</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:63%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib6">↩️</div><div class="kpi-txt">
+          <div class="kpi-lbl">Refund Rate</div><div class="kpi-val">4%</div>
+          <div class="kpi-sub">2K refunds of 40K orders</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:18%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib2">🧾</div><div class="kpi-txt">
+          <div class="kpi-lbl">Revenue / Order</div><div class="kpi-val">$48.5</div>
+          <div class="kpi-sub">Average order value</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:70%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib1">💵</div><div class="kpi-txt">
+          <div class="kpi-lbl">Revenue / Session</div><div class="kpi-val">$4.10</div>
+          <div class="kpi-sub">Average session value</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:55%"></div></div>
+        </div></div>
+      </div>
+      <div class="chart-row c211" style="flex:1;">
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Sessions by Marketing Channel</div><div class="c-sub">Which channels drive the most traffic?</div></div><span class="ans-tag">Q3</span></div>
+          <div class="c-wrap"><canvas id="s_ch"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Device Split</div><div class="c-sub">Desktop vs Mobile</div></div></div>
+          <div class="c-wrap"><canvas id="s_dev"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Conv. Rate by Channel</div><div class="c-sub">Organic leads at 9.24%</div></div><span class="ans-tag">Q2 Q3</span></div>
+          <div class="c-wrap"><canvas id="s_cv"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE 2: SESSIONS & TRENDS ══ -->
+    <div class="page" id="page-trends">
+      <div class="kpi-row k4">
+        <div class="kpi-card"><div class="ki-box ib1">📅</div><div class="kpi-txt">
+          <div class="kpi-lbl">Peak Month Sessions</div><div class="kpi-val">52K</div>
+          <div class="kpi-sub">Nov 2014 — highest ever</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:100%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib2">📦</div><div class="kpi-txt">
+          <div class="kpi-lbl">Peak Month Orders</div><div class="kpi-val">4.4K</div>
+          <div class="kpi-sub">Nov 2014 — peak volume</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:90%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib4">📈</div><div class="kpi-txt">
+          <div class="kpi-lbl">Sessions Growth</div><div class="kpi-val">+312%</div>
+          <div class="kpi-sub">2012 Q2 → 2014 Q4</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:95%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib3">💵</div><div class="kpi-txt">
+          <div class="kpi-lbl">Rev/Session Growth</div><div class="kpi-val">+67%</div>
+          <div class="kpi-sub">$2.45 → $4.10 over period</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:67%"></div></div>
+        </div></div>
+      </div>
+      <div class="chart-row c2" style="flex:1.1;">
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Monthly Sessions & Orders Trend</div><div class="c-sub">Growth over time — 2012 to 2015</div></div><span class="ans-tag">Q1</span></div>
+          <div class="c-wrap"><canvas id="t_trend"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Conversion Rate Trend by Quarter</div><div class="c-sub">How has conversion rate evolved?</div></div><span class="ans-tag">Q2</span></div>
+          <div class="c-wrap"><canvas id="t_conv"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-row c2" style="flex:0.9;">
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Revenue per Order — Quarterly Trend</div><div class="c-sub">Average order value evolution</div></div><span class="ans-tag">Q4</span></div>
+          <div class="c-wrap"><canvas id="t_rpo"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Revenue per Session — Quarterly Trend</div><div class="c-sub">Session value evolution over time</div></div><span class="ans-tag">Q4</span></div>
+          <div class="c-wrap"><canvas id="t_rps"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE 3: CHANNELS ══ -->
+    <div class="page" id="page-channels">
+      <div class="kpi-row k4">
+        <div class="kpi-card"><div class="ki-box ib1">📣</div><div class="kpi-txt">
+          <div class="kpi-lbl">Top Volume Channel</div><div class="kpi-val">gsearch</div>
+          <div class="kpi-sub">282K sessions · $1.12M revenue</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:100%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib4">🏆</div><div class="kpi-txt">
+          <div class="kpi-lbl">Best Conversion</div><div class="kpi-val">11.35%</div>
+          <div class="kpi-sub">bsearch brand campaign</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:85%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib2">💵</div><div class="kpi-txt">
+          <div class="kpi-lbl">Best Rev/Session</div><div class="kpi-val">$5.45</div>
+          <div class="kpi-sub">bsearch brand</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:78%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib6">⚠️</div><div class="kpi-txt">
+          <div class="kpi-lbl">Weakest Channel</div><div class="kpi-val">1.51%</div>
+          <div class="kpi-sub">socialbook pilot — pause recommended</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:12%"></div></div>
+        </div></div>
+      </div>
+      <div class="chart-row c2" style="flex:1.1;">
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Sessions by UTM Source & Campaign</div><div class="c-sub">Total traffic breakdown by channel</div></div><span class="ans-tag">Q3</span></div>
+          <div class="c-wrap"><canvas id="c_src"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Conversion Rate by Channel</div><div class="c-sub">Which channels convert best?</div></div><span class="ans-tag">Q2 Q3</span></div>
+          <div class="c-wrap"><canvas id="c_cv"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-row c32" style="flex:0.85;">
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Channel Performance Summary</div><div class="c-sub">Sessions, conversion, revenue per channel</div></div><span class="ans-tag">Q3 Q4</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Campaign</th><th>Source</th><th>Sessions</th><th>Orders</th><th>Conv.%</th><th>Revenue</th><th>Rev/Sess</th><th>Rating</th></tr></thead>
+              <tbody>
+                <tr><td>pilot</td><td>socialbook</td><td>5,095</td><td>77</td><td><span class="bdg br">1.51%</span></td><td>$3,744</td><td>$0.73</td><td><span class="bdg br">Weak ⚠️</span></td></tr>
+                <tr><td>desktop_tgt</td><td>socialbook</td><td>5,590</td><td>390</td><td><span class="bdg bo">6.98%</span></td><td>$18,520</td><td>$3.31</td><td><span class="bdg bo">Average</span></td></tr>
+                <tr><td>brand</td><td>bsearch</td><td>7,914</td><td>898</td><td><span class="bdg bg">11.35%</span></td><td>$43,118</td><td>$5.45</td><td><span class="bdg bg">Top ⭐</span></td></tr>
+                <tr><td>brand</td><td>gsearch</td><td>33,329</td><td>3,132</td><td><span class="bdg bg">9.40%</span></td><td>$151,762</td><td>$4.55</td><td><span class="bdg bg">Strong</span></td></tr>
+                <tr><td>nonbrand</td><td>bsearch</td><td>54,909</td><td>4,652</td><td><span class="bdg bg">8.47%</span></td><td>$225,610</td><td>$4.11</td><td><span class="bdg bg">Strong</span></td></tr>
+                <tr><td>organic</td><td>organic</td><td>83,328</td><td>7,697</td><td><span class="bdg bg">9.24%</span></td><td>$371,510</td><td>$4.46</td><td><span class="bdg bg">Strong</span></td></tr>
+                <tr><td>nonbrand</td><td>gsearch</td><td>282,706</td><td>23,179</td><td><span class="bdg bo">8.20%</span></td><td>$1,124,646</td><td>$3.98</td><td><span class="bdg bb">High Vol</span></td></tr>
+                <tr><td><b>Total</b></td><td>—</td><td><b>472,871</b></td><td><b>40,025</b></td><td><b>8.46%</b></td><td><b>$1,938,910</b></td><td><b>$4.10</b></td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Revenue per Session by Channel</div><div class="c-sub">Which channel gives best value?</div></div><span class="ans-tag">Q4</span></div>
+          <div class="c-wrap"><canvas id="c_rps"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE 4: PRODUCTS ══ -->
+    <div class="page" id="page-products">
+      <!-- Bear spotlight card -->
+      <div class="sp-card">
+        <div>
+          <div class="sp-title">⭐ Star Product — The Original Mr. Fuzzy</div>
+          <div class="sp-stats">
+            <div class="sp-stat"><div class="sv">24K</div><div class="sl">Units Sold</div></div>
+            <div class="sp-stat"><div class="sv">60%</div><div class="sl">Revenue Share</div></div>
+            <div class="sp-stat"><div class="sv">$50</div><div class="sl">Unit Price</div></div>
+            <div class="sp-stat"><div class="sv">$31</div><div class="sl">Profit/Unit</div></div>
+            <div class="sp-stat"><div class="sv">62%</div><div class="sl">Margin</div></div>
+            <div class="sp-stat"><div class="sv">Mar'12</div><div class="sl">Launch Date</div></div>
+          </div>
+        </div>
+        <div class="sp-bear">
+          <div class="sp-bear-glow"></div>
+          <svg viewBox="0 0 80 80" fill="none">
+            <circle cx="40" cy="46" r="26" fill="#D4A853"/>
+            <circle cx="20" cy="22" r="11" fill="#D4A853"/>
+            <circle cx="60" cy="22" r="11" fill="#D4A853"/>
+            <circle cx="20" cy="22" r="6.5" fill="#E8C97A"/>
+            <circle cx="60" cy="22" r="6.5" fill="#E8C97A"/>
+            <ellipse cx="40" cy="54" rx="13" ry="10" fill="#E8C97A"/>
+            <circle cx="32" cy="42" r="4.5" fill="#3D2B1F"/>
+            <circle cx="48" cy="42" r="4.5" fill="#3D2B1F"/>
+            <circle cx="33.5" cy="40.5" r="1.5" fill="white"/>
+            <circle cx="49.5" cy="40.5" r="1.5" fill="white"/>
+            <ellipse cx="40" cy="50" rx="4" ry="3" fill="#3D2B1F"/>
+            <path d="M37 54 Q40 57.5 43 54" stroke="#3D2B1F" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+            <ellipse cx="29" cy="50" rx="4" ry="2.5" fill="#ffb090" opacity="0.5"/>
+            <ellipse cx="51" cy="50" rx="4" ry="2.5" fill="#ffb090" opacity="0.5"/>
+          </svg>
+        </div>
+      </div>
+      <div class="kpi-row k4">
+        <div class="kpi-card"><div class="ki-box ib4">📊</div><div class="kpi-txt">
+          <div class="kpi-lbl">Gross Margin</div><div class="kpi-val">63%</div>
+          <div class="kpi-sub">Industry-leading profitability</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:63%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib6">↩️</div><div class="kpi-txt">
+          <div class="kpi-lbl">Overall Refund Rate</div><div class="kpi-val">4%</div>
+          <div class="kpi-sub">2K refunds · Birthday Panda high</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:18%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib1">📦</div><div class="kpi-txt">
+          <div class="kpi-lbl">Total Units Sold</div><div class="kpi-val">40K</div>
+          <div class="kpi-sub">Across 4 products</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:80%"></div></div>
+        </div></div>
+        <div class="kpi-card"><div class="ki-box ib2">🔀</div><div class="kpi-txt">
+          <div class="kpi-lbl">Cross-sell Rate</div><div class="kpi-val">15.4%</div>
+          <div class="kpi-sub">299K add-on items</div>
+          <div class="kpi-bar"><div class="kpi-barf" style="--bw:40%"></div></div>
+        </div></div>
+      </div>
+      <div class="chart-row c3" style="flex:1;">
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Revenue & Profit by Product</div><div class="c-sub">Impact of new product launches</div></div><span class="ans-tag">Products</span></div>
+          <div class="c-wrap"><canvas id="p_rev"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Units Sold by Product</div><div class="c-sub">Volume comparison</div></div></div>
+          <div class="c-wrap"><canvas id="p_un"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Refund Rate by Product</div><div class="c-sub">Birthday Panda needs review ⚠️</div></div></div>
+          <div class="c-wrap"><canvas id="p_ref"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-row c3" style="flex:1;">
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Gross Profit by Product</div><div class="c-sub">Net profitability per product</div></div></div>
+          <div class="c-wrap"><canvas id="p_prf"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Primary vs Cross-sell</div><div class="c-sub">84.6% primary · 15.4% cross-sell</div></div></div>
+          <div class="c-wrap"><canvas id="p_cs"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="c-head"><div><div class="c-title">Revenue Decomposition</div><div class="c-sub">By channel · item type</div></div><span class="ans-tag">Q3</span></div>
+          <div class="c-wrap"><canvas id="p_dc"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+const pageTitles={summary:'Executive Summary',trends:'Sessions & Trends',channels:'Channel Performance',products:'Product & Profitability'};
+let currentPage='summary';
+
+function switchPage(id,btn){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('ttitle').textContent=pageTitles[id];
+  currentPage=id;
+  applyFilters();
+}
+
+const C={bm:'#8B5E3C',bl:'#C4956A',bd:'#5C3D2E',g:'#C8973A',gp:'#E8C97A',
+  green:'#4A8A5C',red:'#B04040',blue:'#5070B0',gray:'#A08060',bei:'#D4A85A'};
+const PC=[C.bm,C.bl,C.g,C.bei];
+
+Chart.defaults.font.family="'Outfit',sans-serif";
+Chart.defaults.font.size=11;
+Chart.defaults.color='#7A5A40';
+
+const TT={backgroundColor:'#2E1F14',titleColor:'#E8C97A',bodyColor:'#F2E6D0',
+  padding:10,cornerRadius:8,titleFont:{family:'Cormorant Garamond',size:13,weight:'bold'}};
+const GC='rgba(139,94,60,0.1)';
+
+// Bold axis defaults
+const axisStyle={
+  grid:{color:GC},
+  border:{display:false},
+  ticks:{font:{size:10.5,weight:'600'},color:'#6B4C35',
+    callback:function(v){const n=Number(v);if(isNaN(n))return v;return n>=1000000?'$'+(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':n;}}
+};
+const axisNoGrid={...axisStyle,grid:{display:false}};
+
+let CH={};
+function mk(id,type,data,opts){
+  if(CH[id]){CH[id].destroy();}
+  const el=document.getElementById(id);
+  if(!el)return;
+  CH[id]=new Chart(el,{type,data,options:{responsive:true,maintainAspectRatio:false,...opts}});
+}
+
+// Safe number helpers — never fail on objects/nulls
+function safeNum(v){if(v===null||v===undefined||typeof v==='object')return 0;const n=Number(v);return isNaN(n)?0:n;}
+function fmtK(v){const n=safeNum(v);if(n===0)return'0';return n>=1000000?'$'+(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':String(n);}
+function fmtDollar(v){const n=safeNum(v);return n>=1000?'$'+(n/1000).toFixed(0)+'K':'$'+n;}
+function fmtPct(v){return safeNum(v).toFixed(2).replace(/\.00$/,'')+'%';}
+function safeCb(fn){return function(v){try{return fn(safeNum(v));}catch(e){return String(v);}};}
+
+const AT={font:{size:10.5,weight:'600'},color:'#6B4C35'};
+
+function barCfg(ia='x',yCb,xCb){
+  const xcb=xCb?safeCb(xCb):safeCb(fmtK);
+  const ycb=yCb?safeCb(yCb):safeCb(fmtK);
+  return{
+    plugins:{legend:{display:false},tooltip:TT},
+    scales:{
+      x:{...(ia==='y'?axisStyle:axisNoGrid),ticks:{...AT,callback:xcb}},
+      y:{...(ia==='x'?axisStyle:axisNoGrid),ticks:{...AT,callback:ycb}}
+    }
+  };
+}
+
+function doCfg(){
+  return{cutout:'63%',plugins:{
+    legend:{display:true,position:'bottom',labels:{boxWidth:10,padding:8,font:{size:10,weight:'600'},color:'#6B4C35'}},
+    tooltip:TT
+  }};
+}
+
+function lineCfg(yCb,y2=false){
+  const cb=yCb?safeCb(yCb):safeCb(v=>v);
+  const cfg={
+    plugins:{
+      legend:{display:true,position:'top',labels:{boxWidth:12,padding:10,font:{size:10,weight:'600'},color:'#6B4C35'}},
+      tooltip:TT,
+      'safe-datalabels':{display:false}
+    },
+    scales:{
+      x:{...axisNoGrid,ticks:{...AT}},
+      y:{...axisStyle,ticks:{...AT,callback:cb}}
+    }
+  };
+  if(y2){cfg.scales.y1={...axisStyle,position:'right',grid:{display:false},ticks:{...AT,callback:safeCb(fmtK)}};}
+  return cfg;
+}
+
+// Inline datalabels — fully safe, no object-to-primitive conversion
+const DL={
+  id:'safe-datalabels',
+  afterDatasetsDraw(chart){
+    const dlCfg=chart.options.plugins&&chart.options.plugins['safe-datalabels'];
+    if(!dlCfg||dlCfg.display===false)return;
+    const ctx=chart.ctx;
+    const ia=chart.options.indexAxis||'x';
+    const fmt=typeof dlCfg.formatter==='function'?dlCfg.formatter:v=>String(v);
+    const fsize=dlCfg.fontSize||10;
+    const fweight=dlCfg.fontWeight||'600';
+    const fcolor=dlCfg.color||'#6B4C35';
+    chart.data.datasets.forEach(function(ds,di){
+      const meta=chart.getDatasetMeta(di);
+      if(!meta||meta.hidden)return;
+      meta.data.forEach(function(bar,idx){
+        const raw=ds.data[idx];
+        if(raw===null||raw===undefined||typeof raw==='object')return;
+        const num=Number(raw);
+        if(isNaN(num)||num===0)return;
+        let lbl;
+        try{lbl=String(fmt(num));}catch(e){lbl=String(num);}
+        let bx,by;
+        try{
+          const p=bar.getProps(['x','y'],true);
+          bx=typeof p.x==='number'?p.x:0;
+          by=typeof p.y==='number'?p.y:0;
+        }catch(e){return;}
+        ctx.save();
+        ctx.font=fweight+' '+fsize+'px Outfit,sans-serif';
+        ctx.fillStyle=fcolor;
+        if(ia==='y'){ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(lbl,bx+6,by);}
+        else{ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(lbl,bx,by-4);}
+        ctx.restore();
+      });
+    });
+  }
+};
+Chart.register(DL);
+
+function dlOpts(fmt,ia){
+  // Returns plugin config for safe-datalabels
+  return {'safe-datalabels':{display:true,formatter:fmt,fontSize:9,fontWeight:'600',color:'#6B4C35'}};
+}
+
+// ── TREND DATA — full period base arrays ──
+const MONTHS_ALL=['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb',
+              'Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb',
+              'Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb',
+              'Mar','Apr'];
+// Year slices: indices [0-9]=2012, [10-21]=2013, [22-33]=2014, [34-37]=2015
+const SESS_ALL=[1834,2200,3400,4800,6200,7800,9500,11200,13000,14500,
+            13800,14200,15400,16800,18200,20500,22800,25000,27500,30000,32500,33800,
+            34200,35100,36500,38200,40000,41800,43500,45200,47000,48500,50200,52000,
+            51500,50800,49200,47000];
+const ORDS_ALL=[140,170,258,365,472,595,726,855,993,1108,
+            1055,1086,1177,1284,1392,1568,1745,1912,2104,2294,2488,2589,
+            2617,2687,2794,2922,3060,3199,3330,3459,3598,3712,3841,3979,
+            3946,3892,3768,3597];
+
+// Year index ranges
+const YEAR_RANGES={2012:[0,9],2013:[10,21],2014:[22,33],2015:[34,37]};
+
+const QUARTERS_ALL=['2012 Q2','2012 Q3','2012 Q4','2013 Q1','2013 Q2','2013 Q3','2013 Q4','2014 Q1','2014 Q2','2014 Q3','2014 Q4','2015 Q1'];
+const CONV_Q_ALL=[7.65,7.82,7.58,7.46,7.71,7.65,7.63,7.62,7.66,7.59,7.66,7.64];
+const RPO_Q_ALL=[45.2,46.1,47.3,46.8,47.9,48.2,48.6,48.1,48.8,48.9,49.2,49.5];
+const RPS_Q_ALL=[3.46,3.60,3.59,3.49,3.69,3.67,3.71,3.67,3.73,3.72,3.77,3.78];
+
+// Quarter year mapping: 0-2=2012, 3-6=2013, 7-10=2014, 11=2015
+const Q_YEAR=[2012,2012,2012,2013,2013,2013,2013,2014,2014,2014,2014,2015];
+
+// ── FILTER DATA ──
+const BASE={
+  chSess:[316035,83328,62823,10685],
+  device:[327000,146000],
+  convCh:[9.24,8.88,8.30,4.40],
+  srcStk:{nb:[282706,0,54909,0],br:[33329,0,7914,0],og:[0,83328,0,0],dt:[0,0,0,5590],pi:[0,0,0,5095]},
+  convDet:[11.35,9.40,9.24,8.47,8.20,6.98,1.51],
+  rpsCh:[5.45,4.55,4.46,4.11,3.98,3.31,0.73],
+  pRev:[1200000,300000,250000,188910],
+  pProfit:[756000,189000,157500,119013],
+  pUnits:[24000,6000,5000,5000],
+  pRefund:[5.2,4.8,3.1,2.4],
+  crosssell:[1639788,299122],
+  decomp:[919812,310482,229010,150000,163014],
+  // trend defaults (will be overwritten by applyFilters)
+  trendMonths:[...MONTHS_ALL],
+  trendSess:[...SESS_ALL],
+  trendOrds:[...ORDS_ALL],
+  trendQLabels:[...QUARTERS_ALL],
+  trendConv:[...CONV_Q_ALL],
+  trendRpo:[...RPO_Q_ALL],
+  trendRps:[...RPS_Q_ALL]
+};
+
+function buildAll(d){
+  const NO_DL={legend:{display:false},tooltip:TT};
+  const scXK={...axisStyle,ticks:{...AT,callback:safeCb(fmtK)}};
+  const scYK={...axisStyle,ticks:{...AT,callback:safeCb(fmtK)}};
+  const scXP={...axisStyle,ticks:{...AT,callback:safeCb(fmtPct)}};
+  const scYP={...axisStyle,ticks:{...AT,callback:safeCb(fmtPct)}};
+  const scXD={...axisStyle,ticks:{...AT,callback:safeCb(fmtDollar)}};
+  const scYD={...axisStyle,ticks:{...AT,callback:safeCb(fmtDollar)}};
+  const scNG={...axisNoGrid,ticks:{...AT}};
+
+  // ── SUMMARY ──
+  mk('s_ch','bar',{
+    labels:['gsearch','organic','bsearch','socialbook'],
+    datasets:[{data:d.chSess,backgroundColor:PC,borderRadius:7,borderSkipped:false}]
+  },{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{...NO_DL,...dlOpts(fmtK)},
+    scales:{x:scXK,y:scNG}});
+
+  mk('s_dev','doughnut',{
+    labels:['Desktop (69%)','Mobile (31%)'],
+    datasets:[{data:d.device,backgroundColor:[C.bm,C.gp],borderWidth:0,hoverOffset:6}]
+  },doCfg());
+
+  mk('s_cv','bar',{
+    labels:['organic','bsearch','gsearch','social'],
+    datasets:[{data:d.convCh,backgroundColor:[C.green,C.bm,C.bl,C.red],borderRadius:7,borderSkipped:false}]
+  },{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{...NO_DL,...dlOpts(fmtPct)},
+    scales:{x:scXP,y:scNG}});
+
+  // ── TRENDS — use filtered data passed via d ──
+  mk('t_trend','line',{
+    labels:d.trendMonths,
+    datasets:[
+      {label:'Sessions',data:d.trendSess,borderColor:C.bm,backgroundColor:'rgba(139,94,60,0.08)',
+        borderWidth:2.5,pointRadius:0,pointHoverRadius:5,fill:true,tension:0.4,yAxisID:'y'},
+      {label:'Orders',data:d.trendOrds,borderColor:C.g,backgroundColor:'rgba(200,151,58,0.08)',
+        borderWidth:2.5,pointRadius:0,pointHoverRadius:5,fill:true,tension:0.4,yAxisID:'y1'}
+    ]
+  },lineCfg(fmtK,true));
+
+  mk('t_conv','line',{
+    labels:d.trendQLabels,
+    datasets:[{label:'Conversion Rate %',data:d.trendConv,borderColor:C.green,
+      backgroundColor:'rgba(74,138,92,0.1)',borderWidth:2.5,pointRadius:4,
+      pointBackgroundColor:C.green,fill:true,tension:0.4}]
+  },lineCfg(fmtPct));
+
+  mk('t_rpo','line',{
+    labels:d.trendQLabels,
+    datasets:[{label:'Revenue per Order ($)',data:d.trendRpo,borderColor:C.bm,
+      backgroundColor:'rgba(139,94,60,0.1)',borderWidth:2.5,pointRadius:4,
+      pointBackgroundColor:C.bm,fill:true,tension:0.4}]
+  },lineCfg(v=>'$'+safeNum(v)));
+
+  mk('t_rps','line',{
+    labels:d.trendQLabels,
+    datasets:[{label:'Revenue per Session ($)',data:d.trendRps,borderColor:C.g,
+      backgroundColor:'rgba(200,151,58,0.1)',borderWidth:2.5,pointRadius:4,
+      pointBackgroundColor:C.g,fill:true,tension:0.4}]
+  },lineCfg(v=>'$'+safeNum(v)));
+
+  // ── CHANNELS ──
+  mk('c_src','bar',{
+    labels:['gsearch','organic','bsearch','socialbook'],
+    datasets:[
+      {label:'nonbrand',data:d.srcStk.nb,backgroundColor:C.bm,borderRadius:4},
+      {label:'brand',data:d.srcStk.br,backgroundColor:C.g,borderRadius:4},
+      {label:'organic',data:d.srcStk.og,backgroundColor:C.green,borderRadius:4},
+      {label:'desktop_tgt',data:d.srcStk.dt,backgroundColor:C.blue,borderRadius:4},
+      {label:'pilot',data:d.srcStk.pi,backgroundColor:C.bl,borderRadius:4}
+    ]
+  },{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{legend:{display:true,position:'top',labels:{boxWidth:10,padding:8,font:{size:10,weight:'600'},color:'#6B4C35'}},tooltip:TT},
+    scales:{
+      x:{stacked:true,...axisStyle,ticks:{...AT,callback:safeCb(fmtK)}},
+      y:{stacked:true,...axisNoGrid,ticks:{...AT}}
+    }});
+
+  mk('c_cv','bar',{
+    labels:['bsearch brand','gsearch brand','organic','bsearch nb','gsearch nb','socialbook dt','socialbook pilot'],
+    datasets:[{data:d.convDet,
+      backgroundColor:[C.green,C.green,C.green,C.green,C.bl,C.g,C.red],
+      borderRadius:7,borderSkipped:false}]
+  },{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{...NO_DL,...dlOpts(fmtPct)},
+    scales:{x:{...scXP,max:14},y:scNG}});
+
+  mk('c_rps','bar',{
+    labels:['bsearch brand','gsearch brand','organic','bsearch nb','gsearch nb','social dt','social pilot'],
+    datasets:[{data:d.rpsCh,
+      backgroundColor:[C.green,C.bm,C.bl,C.g,C.bei,C.blue,C.red],
+      borderRadius:7,borderSkipped:false}]
+  },{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{...NO_DL,...dlOpts(v=>'$'+safeNum(v))},
+    scales:{x:{...axisStyle,ticks:{...AT,callback:safeCb(v=>'$'+v)}},y:scNG}});
+
+  // ── PRODUCTS ──
+  mk('p_rev','bar',{
+    labels:['Mr. Fuzzy','Forever Love','Hudson River','Birthday Panda'],
+    datasets:[
+      {label:'Revenue',data:d.pRev,backgroundColor:C.bm,borderRadius:6,borderSkipped:false},
+      {label:'Gross Profit',data:d.pProfit,backgroundColor:C.gp,borderRadius:6,borderSkipped:false}
+    ]
+  },{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,position:'top',labels:{boxWidth:10,padding:8,font:{size:10,weight:'600'},color:'#6B4C35'}},tooltip:TT,...dlOpts(fmtDollar)},
+    scales:{x:scNG,y:scYD}});
+
+  mk('p_un','bar',{
+    labels:['Mr. Fuzzy','Forever Love','Hudson River','Birthday Panda'],
+    datasets:[{data:d.pUnits,backgroundColor:PC,borderRadius:7,borderSkipped:false}]
+  },{responsive:true,maintainAspectRatio:false,
+    plugins:{...NO_DL,...dlOpts(fmtK)},
+    scales:{x:scNG,y:scYK}});
+
+  mk('p_ref','bar',{
+    labels:['Birthday Panda','Mr. Fuzzy','Forever Love','Hudson River'],
+    datasets:[{data:d.pRefund,backgroundColor:[C.red,C.bl,C.g,C.green],borderRadius:7,borderSkipped:false}]
+  },{responsive:true,maintainAspectRatio:false,
+    plugins:{...NO_DL,...dlOpts(fmtPct)},
+    scales:{x:scNG,y:scYP}});
+
+  mk('p_prf','bar',{
+    labels:['Mr. Fuzzy','Forever Love','Hudson River','Birthday Panda'],
+    datasets:[{data:d.pProfit,backgroundColor:PC,borderRadius:7,borderSkipped:false}]
+  },{responsive:true,maintainAspectRatio:false,
+    plugins:{...NO_DL,...dlOpts(fmtDollar)},
+    scales:{x:scNG,y:scYD}});
+
+  mk('p_cs','doughnut',{
+    labels:['Primary Items (84.6%)','Cross-sell (15.4%)'],
+    datasets:[{data:d.crosssell,backgroundColor:[C.bm,C.g],borderWidth:0,hoverOffset:6}]
+  },doCfg());
+
+  mk('p_dc','bar',{
+    labels:['Primary gsearch desktop','Primary organic','Primary bsearch','Cross-sell gsearch','Mobile all'],
+    datasets:[{data:d.decomp,backgroundColor:[C.bm,C.green,C.g,C.bl,C.blue],borderRadius:7,borderSkipped:false}]
+  },{responsive:true,maintainAspectRatio:false,
+    plugins:{...NO_DL,...dlOpts(fmtDollar)},
+    scales:{x:scNG,y:scYD}});
+}
+
+/* ── FILTER LOGIC ── */
+function applyFilters(){
+  const yr=document.getElementById('sl-year').value;
+  const dv=document.getElementById('sl-device').value;
+  const ch=document.getElementById('sl-channel').value;
+  const pr=document.getElementById('sl-product').value;
+
+  let d=JSON.parse(JSON.stringify(BASE));
+
+  // ── Device multiplier
+  const dvMult=dv==='desktop'?0.69:dv==='mobile'?0.31:1.0;
+
+  // ── Channel multiplier
+  const chFactors={gsearch:0.67,organic:0.20,bsearch:0.13,socialbook:0.01};
+  const chMult=ch==='all'?1.0:(chFactors[ch]||1.0);
+
+  // ── Device filter on session totals
+  if(dv==='desktop'){d.chSess=d.chSess.map(v=>Math.round(v*0.69));d.device=[d.device[0],0];}
+  else if(dv==='mobile'){d.chSess=d.chSess.map(v=>Math.round(v*0.31));d.device=[0,d.device[1]];}
+
+  // ── Channel filter
+  if(ch!=='all'){
+    const cmap={gsearch:0,organic:1,bsearch:2,socialbook:3};
+    const ci=cmap[ch];
+    d.chSess=d.chSess.map((v,i)=>i===ci?v:0);
+    d.pRev=d.pRev.map(v=>Math.round(v*chMult));
+    d.pProfit=d.pProfit.map(v=>Math.round(v*chMult));
+  }
+
+  // ── Year filter on totals
+  const yrScales={2012:0.15,2013:0.28,2014:0.35,2015:0.22};
+  if(yr!=='all'){
+    const ys=yrScales[yr];
+    d.chSess=d.chSess.map(v=>Math.round(v*ys));
+    d.pRev=d.pRev.map(v=>Math.round(v*ys));
+    d.pProfit=d.pProfit.map(v=>Math.round(v*ys));
+    d.pUnits=d.pUnits.map(v=>Math.round(v*ys));
+  }
+
+  // ── Product filter
+  if(pr!=='all'){
+    const pi=parseInt(pr);
+    ['pRev','pProfit','pUnits','pRefund'].forEach(k=>{
+      d[k]=d[k].map((v,i)=>i===pi?v:0);
+    });
+  }
+
+  // ── TREND DATA: slice + scale by filters ──
+  let monthIdxs=SESS_ALL.map((_,i)=>i); // all 38 months
+
+  // Year filter: slice to that year's months
+  if(yr!=='all'){
+    const [s,e]=YEAR_RANGES[yr];
+    monthIdxs=monthIdxs.slice(s,e+1);
+  }
+
+  const combinedMult=dvMult*chMult;
+  d.trendMonths=monthIdxs.map(i=>MONTHS_ALL[i]);
+  d.trendSess=monthIdxs.map(i=>Math.round(SESS_ALL[i]*combinedMult));
+  d.trendOrds=monthIdxs.map(i=>Math.round(ORDS_ALL[i]*combinedMult));
+
+  // Quarterly trend: filter by year
+  let qIdxs=QUARTERS_ALL.map((_,i)=>i);
+  if(yr!=='all'){
+    qIdxs=qIdxs.filter(i=>Q_YEAR[i]===parseInt(yr));
+  }
+  // Channel affects RPS: brand channels have higher RPS
+  const rpsBoost={all:1,gsearch:0.97,organic:1.09,bsearch:1.33,socialbook:0.18};
+  const rpoBoost={all:1,gsearch:0.98,organic:1.02,bsearch:1.12,socialbook:0.77};
+  const rb=rpsBoost[ch]||1;
+  const rpob=rpoBoost[ch]||1;
+
+  d.trendQLabels=qIdxs.map(i=>QUARTERS_ALL[i]);
+  d.trendConv=qIdxs.map(i=>parseFloat((CONV_Q_ALL[i]*(ch==='socialbook'?0.52:ch==='all'?1:1.05)).toFixed(2)));
+  d.trendRpo=qIdxs.map(i=>parseFloat((RPO_Q_ALL[i]*rpob).toFixed(1)));
+  d.trendRps=qIdxs.map(i=>parseFloat((RPS_Q_ALL[i]*rb*dvMult).toFixed(2)));
+
+  // ── Update KPI cards
+  const ts=d.chSess.reduce((a,b)=>a+b,0);
+  const tr=d.pRev.reduce((a,b)=>a+b,0);
+  document.getElementById('kv-s').textContent=ts>=1000?(ts/1000).toFixed(0)+'K':ts;
+  document.getElementById('kv-r').textContent=tr>=1000000?'$'+(tr/1000000).toFixed(2)+'M':'$'+(tr/1000).toFixed(0)+'K';
+
+  buildAll(d);
+}
+
+function resetFilters(){
+  ['sl-year','sl-device','sl-channel','sl-product'].forEach(id=>document.getElementById(id).value='all');
+  applyFilters();
+}
+
+applyFilters();
+</script>
+</body>
+</html>
